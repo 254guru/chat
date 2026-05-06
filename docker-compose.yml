@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      # Inline env vars — no .env file required inside the container.
+      # Override any of these via a host .env or docker-compose.override.yml.
+      APP_NAME: RealtimeChat
+      APP_VERSION: "2.0.0"
+      ENVIRONMENT: development
+      DEBUG: "false"
+      # ⚠ Change this before deploying to production
+      SECRET_KEY: "docker-dev-secret-key-change-before-production-deploy"
+      # Plain comma-separated string — NOT JSON-encoded
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://frontend:80"
+      REDIS_URL: "redis://redis:6379/0"
+      DATABASE_URL: "postgresql+asyncpg://chat:chat@postgres:5432/chat_db"
+      SIO_PING_TIMEOUT: "20"
+      SIO_PING_INTERVAL: "10"
+    ports:
+      - "8000:8000"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal
+
+  # ── Frontend (Nginx + built SPA) ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - internal
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+  # ── Postgres ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chat
+      POSTGRES_PASSWORD: chat
+      POSTGRES_DB: chat_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chat -d chat_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
