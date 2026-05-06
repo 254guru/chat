@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: realtime-chat-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # Render free tier — 512MB RAM, shared CPU, spins down after 15min inactivity
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_NAME
+        value: RealtimeChat
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: SECRET_KEY
+        generateValue: true          # Render generates a secure random value
+      - key: CORS_ORIGINS
+        value: "https://your-app.vercel.app"   # fill in after Vercel deploy
+      - key: REDIS_URL
+        sync: false                  # set manually in Render dashboard
+      - key: DATABASE_URL
+        sync: false                  # set manually in Render dashboard
+      - key: SIO_PING_TIMEOUT
+        value: "60"                  # longer timeout — free tier is slower
+      - key: SIO_PING_INTERVAL
+        value: "25"
