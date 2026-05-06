@@ -17,7 +17,7 @@ services:
       - key: SECRET_KEY
         generateValue: true          # Render generates a secure random value
       - key: CORS_ORIGINS
-        value: "https://your-app.vercel.app"   # fill in after Vercel deploy
+        value: "https://chat-ogbw.onrender.com"   # fill in after Vercel deploy
       - key: REDIS_URL
         sync: false                  # set manually in Render dashboard
       - key: DATABASE_URL
