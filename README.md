@@ -1,6 +1,5 @@
 # ⚡ RealtimeChat — Production Architecture
 
-> **Complete overhaul** of [`flask_websocket`](https://github.com/254guru/flask_websocket):  
 > Flask + jQuery → **FastAPI + React + TypeScript + Redis + Docker**
 
 ---
